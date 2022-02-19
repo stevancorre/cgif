@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 
@@ -26,6 +27,6 @@ gif_t gif_load_from_file(const char *file_path);
 
 uint8_t *gif_extract_frame(const gif_t gif, int frame_index);
 
-void gif_export_frames(const char *file_path, const gif_t gif);
+void gif_export_frames(char *dir_path, const gif_t gif);
 
 #endif // GIF_DATA_H_

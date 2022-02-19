@@ -8,6 +8,8 @@
 #include "stb_image.h"
 #include "stb_image_write.h"
 
+#define PATH_CAPACITY 512
+
 uint8_t *gif_extract_frame(const gif_t gif, int frame_index)
 {
     int offset = frame_index * (gif.frame_size + 2);
@@ -46,22 +48,39 @@ gif_t gif_load_from_file(const char *file_path)
         .buffer = data};
 }
 
-void gif_export_frames(const char *file_path, const gif_t gif)
+bool build_path(char *dest, size_t size, char *subdir, int frame_index)
+{
+    if (dest == NULL || size < 1)
+    {
+        return false;
+    }
+
+    if (subdir == NULL)
+    {
+        subdir = "";
+    }
+
+    size_t stored = snprintf(dest, size, "%s/frame-%d.png", subdir, frame_index);
+    return stored + 1 <= size;
+}
+
+void gif_export_frames(char *dir_path, const gif_t gif)
 {
     for (int frame_index = 0; frame_index < gif.frame_count; frame_index++)
     {
         uint8_t *frame_data = gif_extract_frame(gif, frame_index);
 
-        int length = snprintf(NULL, 0, "%s/frame-%d.png", file_path, frame_index);
-        char *output_file_path = malloc(length + 1);
-        snprintf(output_file_path, length + 1, "%s/frame-%d.png", file_path, frame_index);
+        char output_file_path[PATH_CAPACITY];
+        if (!build_path(output_file_path, sizeof(output_file_path), dir_path, frame_index))
+        {
+            fprintf(stderr, "ERROR: can't write to %s: %s\n", output_file_path, strerror(errno));
+            exit(1);
+        }
 
         if (stbi_write_png(output_file_path, gif.width, gif.height, gif.channel_count, frame_data, gif.stride_in_bytes) == 0)
         {
             fprintf(stderr, "ERROR: can't write to %s: %s\n", output_file_path, strerror(errno));
             exit(1);
         }
-
-        free(output_file_path);
     }
 }

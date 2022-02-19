@@ -23,6 +23,7 @@ int main(int argc, char **argv)
     gif_t gif = gif_load_from_file(input_file_path);
 
     gif_export_frames("test/frames", gif);
+    printf("Exported %d frames\n", gif.frame_count);
 
     free(gif.buffer);
 
