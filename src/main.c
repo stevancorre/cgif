@@ -1,11 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-
-#define STB_IMAGE_IMPLEMENTATION
-#define STBI_ONLY_GIF
-#include "stb_image.h"
+#include "gif.h"
 
 static char* program_name;
 
@@ -27,16 +20,11 @@ int main(int argc, char **argv)
         print_usage_and_exit(EXIT_FAILURE);
     }
 
-    int width, height, comp;
-    stbi_uc *data = stbi_load(input_file_path, &width, &height, &comp, 0);
-    if (data == NULL)
-    {
-        char* err = errno == 0 ? "Input file is not a gif" : strerror(errno);
-        fprintf(stderr, "ERROR: can't open %s: %s\n", input_file_path, err);
-        print_usage_and_exit(EXIT_FAILURE);
-    }
+    gif_t gif = gif_load_from_file(input_file_path);
+    printf("w: %d\n", gif.width);
+    printf("h: %d\n", gif.height);
 
-    STBI_FREE(data);
+    free(gif.buffer);
 
     return 0;
 }
