@@ -7000,6 +7000,77 @@ static int stbi__gif_info(stbi__context *s, int *x, int *y, int *comp)
 {
    return stbi__gif_info_raw(s,x,y,comp);
 }
+
+// animated gif API from http://gist.github.com/urraka/685d9a6340b26b830d49
+
+static stbi_uc *stbi_xload(char const *filename, int *x, int *y, int* comp, int req_comp, int *frames)
+{
+	FILE *f;
+	stbi__context s;
+	stbi_uc *result = 0;
+
+	if (!(f = stbi__fopen(filename, "rb")))
+		return stbi__errpuc("can't fopen", "Unable to open file");
+
+	stbi__start_file(&s, f);
+
+	if (stbi__gif_test(&s)) {
+		int layers = 0;
+		stbi_uc *u = 0;
+		stbi_uc *out = 0;
+		stbi_uc *pos = 0;
+		stbi_uc *two_back = 0;
+		stbi__gif g = { 0 };
+		int stride;
+
+		do {
+			u = stbi__gif_load_next(&s, &g, comp, req_comp, two_back);
+			if (u == (stbi_uc *)&s) u = 0;  // end of animated gif marker
+
+			if (u) {
+				// these never actually change from frame to frame ...
+				*x = g.w;
+				*y = g.h;
+				stride = g.w * g.h * 4;
+
+				++layers;
+
+				out = (stbi_uc*) STBI_REALLOC(out, layers * (stride+2));
+
+				pos = out + ((layers-1) * (stride+2));
+				memcpy( pos, u, stride );
+				pos += stride;
+				*pos++ = g.delay & 0xFF;
+				*pos++ = (g.delay & 0xFF00) >> 8;
+
+				if (layers >= 2) {
+					two_back = pos - 2 * (stride+2);
+				}
+			}
+		} while (u != 0);
+
+		// free temp buffer;
+		STBI_FREE(g.out);
+		STBI_FREE(g.history);
+		STBI_FREE(g.background);
+
+		// @rswinkle: shouldn't this have happened already?  in each gif_load_next call?
+		// do the final conversion after loading everything;
+		//if (req_comp && req_comp != 4)
+		//	out = stbi__convert_format(out, 4, req_comp, layers * g.w, g.h);
+
+		*frames = layers;
+		result = out;
+
+	} else {
+		stbi__result_info ri;
+		result = (stbi_uc*)stbi__load_main(&s, x, y, comp, req_comp, &ri, 8);
+		*frames = !!result;
+	}
+
+	fclose(f);
+	return result;
+}
 #endif
 
 // *************************************************************************************************
