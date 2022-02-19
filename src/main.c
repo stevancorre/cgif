@@ -21,8 +21,8 @@ int main(int argc, char **argv)
     }
 
     gif_t gif = gif_load_from_file(input_file_path);
-    printf("w: %d\n", gif.width);
-    printf("h: %d\n", gif.height);
+
+    gif_export_frames("test/frames", gif);
 
     free(gif.buffer);
 

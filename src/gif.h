@@ -13,18 +13,19 @@ typedef struct
     const int height;
 
     const int channel_count;
-    const int pixel_count;
+    const int stride_in_bytes;
 
     const size_t frame_size;
-    const uint32_t frame_count;
+    const int frame_count;
     const int16_t frame_delay;
 
-    int frame_index;
     uint8_t *buffer;
 } gif_t;
 
-uint8_t *gif_extract_frame(const gif_t gif);
-
 gif_t gif_load_from_file(const char *file_path);
+
+uint8_t *gif_extract_frame(const gif_t gif, int frame_index);
+
+void gif_export_frames(const char *file_path, const gif_t gif);
 
 #endif // GIF_DATA_H_
